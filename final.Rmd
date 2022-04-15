@@ -42,7 +42,7 @@ d=pivot_longer(
 d
 ```
 
-## model fit
+## model fit& model diagnostics
 ```{r}
 d$water=factor(rep(rep(c("tap","purified"),each=4),times=4))
 d$milk = factor(rep(rep(c("whole","skim"),each=2),times=8))
@@ -51,6 +51,7 @@ d$name=NULL
 fit <- aov(PH ~water+milk+ratio+sugar+water:milk+water:ratio+water:sugar
            +milk:ratio+milk:sugar+ratio:sugar+block,d)
 anova(fit)
+plot(fit)
 ```
 
 ## interaction plot
