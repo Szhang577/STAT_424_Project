@@ -175,14 +175,3 @@ dimnames(Summary)[[1]] <- c(dimnames(etch.rate)[[1]],"Effect")
 Summary
 ```
 
-```{r}
-etch.vec <- c(t(etch.rate))
-options(contrasts=c("contr.sum","contr.poly"))
-as.factor(A)
-Af <- rep(as.factor(A),rep(2,16))
-Bf <- rep(as.factor(B),rep(2,16))
-Cf <- rep(as.factor(C),rep(2,16))
-Df <- rep(as.factor(D),rep(2,16))
-etch.lm <- lm(etch.vec ~ Af*Bf*Cf*Df)
-summary(etch.lm)
-```
