@@ -1,5 +1,5 @@
 ---
-title: "final_project"
+title: "Appendix"
 output:
   pdf_document: default
   html_document: default
@@ -10,9 +10,10 @@ knitr::opts_chunk$set(echo = TRUE)
 library(knitr)
 library(tidyr)
 library(ggplot2)
+library(dplyr)
 ```
 
-
+## set up data
 ```{r}
 ratio <- factor(rep(c("1:1","1:3"),each=2))
 block=factor(rep(c(1,2),times=2))
@@ -29,7 +30,9 @@ t=cbind(ratio,block,t)
 t
 ```
 ```{r}
-colnames(t)[3:10]=c("tap whole white","tap whole brown","tap skim white","tap skim brown","purif whole white","purif whole brown","purif skim white","purif skim brown")
+colnames(t)[3:10]=c("tap whole white","tap whole brown","tap skim white",
+                    "tap skim brown","purif whole white","purif whole brown",
+                    "purif skim white","purif skim brown")
 kable(t)
 d=pivot_longer(
   t,
@@ -39,15 +42,18 @@ d=pivot_longer(
 d
 ```
 
+## model fit
 ```{r}
 d$water=factor(rep(rep(c("tap","purified"),each=4),times=4))
 d$milk = factor(rep(rep(c("whole","skim"),each=2),times=8))
 d$sugar=factor(rep(c("white","brown"),times=16))
 d$name=NULL
-fit <- aov(PH ~water+milk+ratio+sugar+water:milk+water:ratio+water:sugar+milk:ratio+milk:sugar+ratio:sugar+block,d)
+fit <- aov(PH ~water+milk+ratio+sugar+water:milk+water:ratio+water:sugar
+           +milk:ratio+milk:sugar+ratio:sugar+block,d)
 anova(fit)
 ```
 
+## interaction plot
 ```{r}
 par(mfrow=c(3,2),font = 10) 
 
@@ -107,5 +113,75 @@ xlab = "Sugar",
 col = c("red", "blue","black"),
 trace.label = "ratio")
 ```
+## normality plot on factor effects
+```{r}
+d_coded <- d %>%
+  mutate(water = ifelse(water == 'tap', -1, 1),
+         milk = ifelse(milk == 'whole', -1, 1),
+         sugar = ifelse(sugar == "white", -1, 1),
+         ratio = ifelse(ratio == "1:1", -1, 1))
 
+fit_coded <- lm(PH~ water * milk * sugar * ratio+block, d_coded)
+effects <- 2 * coef(fit_coded)[-1] # exclude intercept
+t(effects)
+daniel_plot <- function(effects, p = c(0.3, 0.7)) { 
+  qq <- qqnorm(effects, datax = TRUE)
+  qqline(effects, col = "red", probs = p, datax = TRUE)
+  text(qq$x, qq$y, names(effects), pos=3)
+}
+daniel_plot(effects)
+```
 
+## contrast
+```{r}
+etch.rate <- matrix(c(6.59,6.75,6.52,6.65,6.55,6.70,6.31,6.64,
+                      6.60,6.70,6.41,6.75,6.50,6.72,6.40,6.75,6.40,
+                      6.58,6.44,6.56,6.46,6.62,6.43,6.70,6.48,6.60,
+                      6.36,6.55,6.38,6.64,6.28,6.64),
+                    byrow=T,ncol=2)
+dimnames(etch.rate) <- list( c("(1)","a","b","ab","c","ac","bc","d",
+                               "ad","bd","cd","abc","bcd","abd","acd","abcd"),
+                             c("Rep1","Rep2"))
+# etch.rate
+A <- c(-1,1,-1,1,-1,1,-1,-1,1,-1,-1,1,-1,1,1,1)
+B <- c(-1,-1,1,1,-1,-1,1,-1,-1,1,-1,1,1,1,-1,1)
+C <- c(-1,-1,-1,-1,1,1,1,-1,-1,-1,1,1,1,-1,1,1)
+D <- c(-1,-1,-1,-1,-1,-1,-1,1,1,1,1,-1,1,1,1,1)
+Total <- apply(etch.rate,1,sum)
+ cbind(A,B,C,D,etch.rate,Total)
+```
+
+```{r}
+rep = 2
+AB <- A*B
+AC <- A*C
+BC <- B*C
+AD <- A*D
+BD <- B*D
+CD <- C*D
+ABC <- A*B*C
+BCD <- B*C*D
+ABD <- A*B*D
+ACD <- A*C*D
+ABCD <- A*B*C*D
+cbind(A,B,C,AB,AC,BC,AD,BD,CD,ABC,BCD,ABD,ACD,ABCD,Total)
+```
+
+```{r}
+Effects <- t(Total) %*% cbind(A,B,C,AB,AC,BC,AD,BD,CD,ABC,BCD,ABD,ACD,ABCD)/(8*rep)
+Summary <- rbind( cbind(A,B,C,AB,AC,BC,AD,BD,CD,ABC,BCD,ABD,ACD,ABCD),Effects)
+dimnames(Summary)[[1]] <- c(dimnames(etch.rate)[[1]],"Effect")
+Summary
+```
+
+```{r}
+etch.vec <- c(t(etch.rate))
+options(contrasts=c("contr.sum","contr.poly"))
+as.factor(A)
+Af <- rep(as.factor(A),rep(2,16))
+Bf <- rep(as.factor(B),rep(2,16))
+Cf <- rep(as.factor(C),rep(2,16))
+Df <- rep(as.factor(D),rep(2,16))
+etch.lm <- lm(etch.vec ~ Af*Bf*Cf*Df)
+summary(etch.lm)
+```
