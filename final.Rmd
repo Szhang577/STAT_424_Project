@@ -142,7 +142,7 @@ etch.rate <- matrix(c(6.59,6.75,6.52,6.65,6.55,6.70,6.31,6.64,
                     byrow=T,ncol=2)
 dimnames(etch.rate) <- list( c("(1)","a","b","ab","c","ac","bc","d",
                                "ad","bd","cd","abc","bcd","abd","acd","abcd"),
-                             c("Rep1","Rep2"))
+                             c("Day1","Day2"))
 # etch.rate
 A <- c(-1,1,-1,1,-1,1,-1,-1,1,-1,-1,1,-1,1,1,1)
 B <- c(-1,-1,1,1,-1,-1,1,-1,-1,1,-1,1,1,1,-1,1)
@@ -165,12 +165,12 @@ BCD <- B*C*D
 ABD <- A*B*D
 ACD <- A*C*D
 ABCD <- A*B*C*D
-cbind(A,B,C,AB,AC,BC,AD,BD,CD,ABC,BCD,ABD,ACD,ABCD,Total)
+cbind(A,B,C,D,AB,AC,BC,AD,BD,CD,ABC,BCD,ABD,ACD,ABCD,Total)
 ```
 
 ```{r}
-Effects <- t(Total) %*% cbind(A,B,C,AB,AC,BC,AD,BD,CD,ABC,BCD,ABD,ACD,ABCD)/(8*rep)
-Summary <- rbind( cbind(A,B,C,AB,AC,BC,AD,BD,CD,ABC,BCD,ABD,ACD,ABCD),Effects)
+Effects <- t(Total) %*% cbind(A,B,C,D,AB,AC,BC,AD,BD,CD,ABC,BCD,ABD,ACD,ABCD)/(8*rep)
+Summary <- rbind( cbind(A,B,C,D,AB,AC,BC,AD,BD,CD,ABC,BCD,ABD,ACD,ABCD),Effects)
 dimnames(Summary)[[1]] <- c(dimnames(etch.rate)[[1]],"Effect")
 Summary
 ```
